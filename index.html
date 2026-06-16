@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Лудо Приключение</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -14,12 +14,14 @@
         
         body {
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Arial Black', 'Impact', sans-serif;
             background: #0a0e27;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .fog-bg {
@@ -94,7 +96,7 @@
             justify-content: center;
             align-items: center;
             background: #0a0e27;
-            transition: opacity 1s ease;
+            transition: opacity 0.8s ease;
         }
         
         .loader-overlay.hidden {
@@ -103,8 +105,8 @@
         }
         
         .loader-spinner {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             border: 4px solid rgba(255, 255, 255, 0.05);
             border-top: 4px solid #ff2d55;
             border-radius: 50%;
@@ -142,6 +144,45 @@
             transition: width 0.3s ease;
         }
         
+        /* ===== КНОПКА "НАЖМИТЕ ДЛЯ ПРОДОЛЖЕНИЯ" ===== */
+        .continue-btn {
+            margin-top: 30px;
+            padding: 14px 40px;
+            background: linear-gradient(145deg, #ff2d55, #ff6b6b);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 30px rgba(255, 45, 85, 0.2);
+            -webkit-tap-highlight-color: transparent;
+            display: none;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .continue-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(255, 45, 85, 0.3);
+        }
+        
+        .continue-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .continue-btn.show {
+            display: inline-block;
+            animation: fadeInBtn 0.5s ease;
+        }
+        
+        @keyframes fadeInBtn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
         /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
         .main-container {
             position: relative;
@@ -171,6 +212,7 @@
                 inset 0 2px 0 rgba(255, 255, 255, 0.2);
             opacity: 0;
             pointer-events: none;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .start-btn.visible {
@@ -214,7 +256,7 @@
             }
         }
         
-        /* ===== АВТОРИЗАЦИЯ (всплывающий блок) ===== */
+        /* ===== АВТОРИЗАЦИЯ ===== */
         .auth-overlay {
             position: fixed;
             inset: 0;
@@ -224,7 +266,9 @@
             align-items: center;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             animation: fadeIn 0.3s ease;
+            padding: 20px;
         }
         
         .auth-overlay.active {
@@ -240,6 +284,7 @@
             position: relative;
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
             padding: 50px 40px;
@@ -264,6 +309,7 @@
             font-size: 28px;
             cursor: pointer;
             transition: color 0.3s;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .close-auth:hover {
@@ -290,6 +336,7 @@
             transition: all 0.3s;
             background: transparent;
             color: rgba(255, 255, 255, 0.4);
+            -webkit-tap-highlight-color: transparent;
         }
         
         .auth-tab.active {
@@ -316,6 +363,7 @@
             font-size: 16px;
             transition: border-color 0.3s, box-shadow 0.3s;
             outline: none;
+            -webkit-appearance: none;
         }
         
         .form-group input:focus {
@@ -342,6 +390,7 @@
             letter-spacing: 1px;
             margin-top: 10px;
             box-shadow: 0 0 30px rgba(255, 45, 85, 0.2);
+            -webkit-tap-highlight-color: transparent;
         }
         
         .auth-btn:hover {
@@ -389,7 +438,7 @@
             display: block;
         }
         
-        /* ===== DASHBOARD (после входа) ===== */
+        /* ===== DASHBOARD ===== */
         .dashboard-container {
             position: relative;
             z-index: 10;
@@ -407,7 +456,7 @@
             font-weight: 900;
             color: #fff;
             text-shadow: 0 0 40px rgba(100, 150, 255, 0.2);
-            margin-bottom: 10px;
+            margin-bottom: 30px;
         }
         
         .user-name {
@@ -415,17 +464,31 @@
             text-shadow: 0 0 30px rgba(255, 45, 85, 0.3);
         }
         
-        .user-balance {
-            color: #ffd700;
-            font-size: 24px;
-            margin: 15px 0;
-            text-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        .profile-btn {
+            padding: 14px 35px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            margin-bottom: 20px;
         }
         
-        .sub-text {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 16px;
-            margin-bottom: 30px;
+        .profile-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .coming-soon {
+            padding: 40px;
+            border: 2px dashed rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 18px;
+            letter-spacing: 2px;
         }
         
         .logout-btn {
@@ -433,26 +496,47 @@
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.4);
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s;
+            margin-top: 20px;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .logout-btn:hover {
-            background: rgba(255, 45, 85, 0.2);
+            background: rgba(255, 45, 85, 0.15);
             border-color: #ff2d55;
             color: #ff6b6b;
         }
         
-        .coming-soon {
-            margin-top: 40px;
-            padding: 30px;
-            border: 2px dashed rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 18px;
-            letter-spacing: 2px;
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 30px 20px;
+                border-radius: 20px;
+            }
+            
+            .start-btn {
+                padding: 18px 30px;
+                font-size: 18px;
+                letter-spacing: 2px;
+            }
+            
+            .loader-text {
+                font-size: 18px;
+            }
+            
+            .loader-spinner {
+                width: 50px;
+                height: 50px;
+                border-width: 3px;
+            }
+            
+            .continue-btn {
+                padding: 12px 30px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -468,9 +552,12 @@
         <div class="loader-progress">
             <div class="loader-progress-bar" id="progressBar"></div>
         </div>
+        <button class="continue-btn" id="continueBtn" onclick="continueToSite()">
+            Нажмите для продолжения
+        </button>
     </div>
     
-    <!-- ===== ОСНОВНОЙ ЭКРАН ===== -->
+    <!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
     <div class="main-container" id="mainContent">
         <button class="start-btn" id="startBtn" onclick="openAuth()">
             Начать лудо приключение
@@ -515,19 +602,16 @@
         </div>
     </div>
     
-    <!-- ===== DASHBOARD (после входа) ===== -->
+    <!-- ===== DASHBOARD ===== -->
     <div class="dashboard-container" id="dashboard">
         <h1 class="welcome-text">
-            Добро пожаловать, <span class="user-name" id="username">Игрок</span>! 🎰
+            Добро пожаловать, <span class="user-name" id="dashUsername">Игрок</span>! 🎰
         </h1>
-        <div class="user-balance">💰 Баланс: <span id="balance">1000</span> ₴</div>
-        <p class="sub-text">Вы успешно вошли в систему</p>
-        
-        <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
-        
+        <button class="profile-btn" onclick="goToProfile()">👤 Профиль</button>
         <div class="coming-soon">
             ⏳ Скоро здесь появится игра...
         </div>
+        <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
     </div>
     
     <script>
@@ -556,54 +640,55 @@
         audio.loop = true;
         audio.volume = 0.3;
         
-        let musicLoaded = false;
-        let progress = 0;
         const progressBar = document.getElementById('progressBar');
         const loader = document.getElementById('loader');
         const startBtn = document.getElementById('startBtn');
+        const continueBtn = document.getElementById('continueBtn');
+        let continueShown = false;
+        
+        // Показываем кнопку "Нажмите для продолжения"
+        function showContinue() {
+            if (continueShown) return;
+            continueShown = true;
+            continueBtn.classList.add('show');
+        }
         
         // Отслеживаем загрузку
         audio.addEventListener('progress', () => {
             if (audio.buffered.length > 0) {
                 const buffered = audio.buffered.end(0);
                 const duration = audio.duration || 1;
-                progress = Math.min((buffered / duration) * 100, 100);
+                const progress = Math.min((buffered / duration) * 100, 100);
                 progressBar.style.width = progress + '%';
+                
+                // Если загружено больше 30% - показываем кнопку
+                if (progress > 30 && !continueShown) {
+                    showContinue();
+                }
             }
         });
         
         audio.addEventListener('canplaythrough', () => {
-            musicLoaded = true;
             progressBar.style.width = '100%';
-            
-            // Играем музыку
-            audio.play().catch(() => {
-                // Если браузер блокирует автозапуск, ждём клик
-            });
-            
+            showContinue();
+        });
+        
+        // Таймаут через 4 секунды - показываем кнопку
+        setTimeout(showContinue, 4000);
+        
+        // Функция продолжения
+        function continueToSite() {
             // Скрываем загрузчик
-            setTimeout(() => {
-                loader.classList.add('hidden');
-                startBtn.classList.add('visible');
-            }, 500);
-        });
-        
-        // Если загрузка идёт долго, показываем прогресс
-        let checkInterval = setInterval(() => {
-            if (audio.buffered.length > 0) {
-                const buffered = audio.buffered.end(0);
-                const duration = audio.duration || 1;
-                progress = Math.min((buffered / duration) * 100, 100);
-                progressBar.style.width = progress + '%';
-            }
-        }, 200);
-        
-        // При клике на страницу запускаем музыку (если не запустилась)
-        document.addEventListener('click', function firstClick() {
-            if (!audio.paused) return;
+            loader.classList.add('hidden');
+            
+            // Запускаем музыку
             audio.play().catch(() => {});
-            document.removeEventListener('click', firstClick);
-        });
+            
+            // Показываем кнопку "Начать лудо приключение"
+            setTimeout(() => {
+                startBtn.classList.add('visible');
+            }, 300);
+        }
         
         // ============================================================
         // 3. НАСТРОЙКИ SUPABASE
@@ -714,7 +799,8 @@
                     .from('users')
                     .insert({
                         username: username,
-                        password: password
+                        password: password,
+                        balance: 1000
                     });
                 
                 if (insertError) {
@@ -801,11 +887,14 @@
         function showDashboard(username) {
             document.getElementById('mainContent').style.display = 'none';
             document.getElementById('dashboard').classList.add('active');
-            document.getElementById('username').textContent = username;
-            document.getElementById('balance').textContent = localStorage.getItem('user_balance') || 1000;
+            document.getElementById('dashUsername').textContent = username;
             
             // Выключаем музыку
             audio.pause();
+        }
+        
+        function goToProfile() {
+            window.location.href = 'profile.html';
         }
         
         function logout() {
@@ -828,8 +917,7 @@
             if (user) {
                 document.getElementById('mainContent').style.display = 'none';
                 document.getElementById('dashboard').classList.add('active');
-                document.getElementById('username').textContent = user;
-                document.getElementById('balance').textContent = localStorage.getItem('user_balance') || 1000;
+                document.getElementById('dashUsername').textContent = user;
                 audio.pause();
             }
         })();
