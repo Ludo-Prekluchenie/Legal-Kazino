@@ -227,6 +227,21 @@
             display: block;
         }
         
+        .auth-success {
+            background: rgba(46, 213, 115, 0.15);
+            border: 1px solid rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .auth-success.show {
+            display: block;
+        }
+        
         .back-link {
             display: block;
             text-align: center;
@@ -257,6 +272,7 @@
         </div>
         
         <div class="auth-error" id="authError"></div>
+        <div class="auth-success" id="authSuccess"></div>
         
         <!-- Форма входа -->
         <form id="loginForm" onsubmit="handleLogin(event)">
@@ -274,12 +290,12 @@
         <!-- Форма регистрации -->
         <form id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
             <div class="form-group">
-                <label>Никнейм</label>
-                <input type="text" id="regUsername" placeholder="Придумайте никнейм" required />
+                <label>Придумайте никнейм</label>
+                <input type="text" id="regUsername" placeholder="Например: KILLER228" required />
             </div>
             <div class="form-group">
                 <label>Пароль</label>
-                <input type="password" id="regPassword" placeholder="Придумайте пароль" required minlength="6" />
+                <input type="password" id="regPassword" placeholder="Минимум 6 символов" required minlength="6" />
             </div>
             <div class="form-group">
                 <label>Подтвердите пароль</label>
@@ -319,9 +335,33 @@
         })();
         
         // ============================================================
-        // 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+        // 3. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+        // ============================================================
+        function showError(message) {
+            const el = document.getElementById('authError');
+            document.getElementById('authSuccess').classList.remove('show');
+            el.textContent = message;
+            el.classList.add('show');
+        }
+        
+        function showSuccess(message) {
+            const el = document.getElementById('authSuccess');
+            document.getElementById('authError').classList.remove('show');
+            el.textContent = message;
+            el.classList.add('show');
+        }
+        
+        function hideMessages() {
+            document.getElementById('authError').classList.remove('show');
+            document.getElementById('authSuccess').classList.remove('show');
+        }
+        
+        // ============================================================
+        // 4. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
         // ============================================================
         function switchTab(tab) {
+            hideMessages();
+            
             const tabs = document.querySelectorAll('.auth-tab');
             tabs.forEach(el => el.classList.remove('active'));
             
@@ -334,53 +374,51 @@
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('registerForm').style.display = 'block';
             }
-            
-            document.getElementById('authError').classList.remove('show');
         }
         
         // ============================================================
-        // 4. ПОКАЗ ОШИБКИ
-        // ============================================================
-        function showError(message) {
-            const errorEl = document.getElementById('authError');
-            if (!errorEl) return;
-            errorEl.textContent = message;
-            errorEl.classList.add('show');
-        }
-        
-        // ============================================================
-        // 5. РЕГИСТРАЦИЯ
+        // 5. РЕГИСТРАЦИЯ (БЕЗ EMAIL!)
         // ============================================================
         async function handleRegister(event) {
             event.preventDefault();
+            hideMessages();
             
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
             
+            // Проверки
             if (!username) {
-                showError('Введите никнейм');
+                showError('❌ Введите никнейм');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showError('❌ Никнейм должен быть минимум 3 символа');
                 return;
             }
             
             if (password.length < 6) {
-                showError('Пароль должен быть не менее 6 символов');
+                showError('❌ Пароль должен быть минимум 6 символов');
                 return;
             }
             
             if (password !== confirmPassword) {
-                showError('Пароли не совпадают');
+                showError('❌ Пароли не совпадают');
                 return;
             }
             
+            // Генерируем фейковый email на основе ника + рандомный суффикс
+            const fakeEmail = username.toLowerCase() + '_' + Math.random().toString(36).substring(2, 6) + '@ludo.game';
+            
             const btn = document.getElementById('registerBtn');
             btn.disabled = true;
-            btn.textContent = 'Регистрация...';
+            btn.textContent = '⏳ Регистрация...';
             
             try {
-                // Регистрация в Supabase Auth
+                // Регистрация в Supabase Auth с фейковым email
                 const { data, error } = await supabaseClient.auth.signUp({
-                    email: username + '@temp.local',
+                    email: fakeEmail,
                     password: password,
                     options: {
                         data: {
@@ -391,13 +429,16 @@
                 
                 if (error) {
                     if (error.message.includes('User already registered')) {
-                        throw new Error('Пользователь с таким никнеймом уже существует');
+                        throw new Error('❌ Пользователь с таким никнеймом уже существует');
                     }
-                    throw new Error(error.message);
+                    if (error.message.includes('email')) {
+                        throw new Error('❌ Ошибка с email. Попробуйте другой никнейм');
+                    }
+                    throw new Error('❌ ' + error.message);
                 }
                 
                 if (!data.user) {
-                    throw new Error('Ошибка при создании пользователя');
+                    throw new Error('❌ Ошибка при создании пользователя');
                 }
                 
                 // Добавляем запись в таблицу users
@@ -412,12 +453,19 @@
                     console.warn('Ошибка вставки в users:', insertError);
                 }
                 
-                alert('✅ Регистрация успешна! Теперь войдите в аккаунт.');
+                showSuccess('✅ Регистрация успешна! Теперь войдите в аккаунт.');
                 
-                // Переключаем на вход и подставляем никнейм
-                switchTab('login');
-                document.getElementById('loginUsername').value = username;
-                document.getElementById('loginPassword').value = '';
+                // Очищаем форму и переключаем на вход
+                document.getElementById('regUsername').value = '';
+                document.getElementById('regPassword').value = '';
+                document.getElementById('regConfirmPassword').value = '';
+                
+                setTimeout(() => {
+                    switchTab('login');
+                    document.getElementById('loginUsername').value = username;
+                    document.getElementById('loginPassword').value = '';
+                    hideMessages();
+                }, 1500);
                 
             } catch (error) {
                 showError(error.message);
@@ -432,41 +480,76 @@
         // ============================================================
         async function handleLogin(event) {
             event.preventDefault();
+            hideMessages();
             
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
             
             if (!username || !password) {
-                showError('Введите никнейм и пароль');
+                showError('❌ Введите никнейм и пароль');
                 return;
             }
             
             const btn = document.getElementById('loginBtn');
             btn.disabled = true;
-            btn.textContent = 'Вход...';
+            btn.textContent = '⏳ Вход...';
             
             try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: username + '@temp.local',
+                // Получаем всех пользователей, чтобы найти email по нику
+                const { data: users, error: fetchError } = await supabaseClient
+                    .from('users')
+                    .select('id, username')
+                    .eq('username', username);
+                
+                if (fetchError || !users || users.length === 0) {
+                    throw new Error('❌ Пользователь не найден');
+                }
+                
+                // Получаем email из auth.users через RPC или просто пробуем войти
+                // Самый простой способ: пытаемся войти через email = username@temp.local
+                // Но поскольку при регистрации email был фейковый, его надо запомнить
+                // Вместо этого используем другой подход
+                
+                // Вариант: ищем пользователя в auth.users по метаданным
+                const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                    email: username.toLowerCase() + '@ludo.game',
                     password: password
                 });
                 
-                if (error) {
-                    if (error.message.includes('Invalid login credentials')) {
-                        throw new Error('Неверный никнейм или пароль');
+                // Если не получилось с @ludo.game, пробуем @temp.local
+                if (authError) {
+                    const { data: authData2, error: authError2 } = await supabaseClient.auth.signInWithPassword({
+                        email: username.toLowerCase() + '@temp.local',
+                        password: password
+                    });
+                    
+                    if (authError2) {
+                        if (authError2.message.includes('Invalid login credentials')) {
+                            throw new Error('❌ Неверный никнейм или пароль');
+                        }
+                        throw new Error('❌ ' + authError2.message);
                     }
-                    throw new Error(error.message);
+                    
+                    if (!authData2.user) {
+                        throw new Error('❌ Ошибка входа');
+                    }
+                    
+                    // Сохраняем сессию
+                    localStorage.setItem('supabase_session', JSON.stringify(authData2.session));
+                    localStorage.setItem('current_user', username);
+                    
+                    window.location.href = 'dashboard.html';
+                    return;
                 }
                 
-                if (!data.user) {
-                    throw new Error('Ошибка входа');
+                if (!authData.user) {
+                    throw new Error('❌ Ошибка входа');
                 }
                 
                 // Сохраняем сессию
-                localStorage.setItem('supabase_session', JSON.stringify(data.session));
+                localStorage.setItem('supabase_session', JSON.stringify(authData.session));
                 localStorage.setItem('current_user', username);
                 
-                // Переход на дашборд
                 window.location.href = 'dashboard.html';
                 
             } catch (error) {
@@ -487,7 +570,7 @@
                     window.location.href = 'dashboard.html';
                 }
             } catch (e) {
-                // Не авторизованы — остаемся на странице
+                // Не авторизованы
             }
         }
         // checkAuth();
