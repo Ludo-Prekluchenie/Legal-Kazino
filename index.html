@@ -1,240 +1,105 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Лудо Приключение</title>
-    <script src="audio.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+// audio.js - Управление музыкой на сайте
+
+class AudioManager {
+    constructor() {
+        this.audio = null;
+        this.isPlaying = false;
+        this.initialized = false;
+        this.ready = false;
+    }
+
+    init() {
+        if (this.initialized) return;
         
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Arial Black', 'Impact', sans-serif;
-            background: #0a0e27;
-            overflow: hidden;
-        }
+        // Проверяем сохранённое состояние
+        const savedTime = localStorage.getItem('music_time');
+        const savedState = localStorage.getItem('music_state');
         
-        .fog-bg {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            background: 
-                radial-gradient(ellipse at 20% 50%, rgba(30, 60, 180, 0.4) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(60, 30, 180, 0.3) 0%, transparent 60%),
-                radial-gradient(ellipse at 50% 100%, rgba(20, 100, 200, 0.2) 0%, transparent 50%),
-                linear-gradient(180deg, #0a0e27 0%, #1a1a4e 50%, #0a0e27 100%);
-        }
+        this.audio = new Audio('voice.m4a');
+        this.audio.loop = true;
+        this.audio.volume = 0.3; // Немного тише, чтобы не оглушать
         
-        .fog-layer {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-        }
-        
-        .fog-layer::before,
-        .fog-layer::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: 
-                radial-gradient(ellipse at 30% 60%, rgba(100, 150, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 40%, rgba(80, 120, 255, 0.06) 0%, transparent 50%);
-            animation: fogMove 20s ease-in-out infinite alternate;
-        }
-        
-        .fog-layer::after {
-            background: 
-                radial-gradient(ellipse at 50% 80%, rgba(60, 100, 255, 0.05) 0%, transparent 40%);
-            animation-duration: 25s;
-            animation-direction: alternate-reverse;
-        }
-        
-        @keyframes fogMove {
-            0% { transform: translateX(-5%) scale(1); opacity: 0.6; }
-            100% { transform: translateX(5%) scale(1.1); opacity: 1; }
-        }
-        
-        .stars {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-        }
-        
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #fff;
-            border-radius: 50%;
-            animation: twinkle 3s ease-in-out infinite alternate;
-        }
-        
-        @keyframes twinkle {
-            0% { opacity: 0.2; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1.2); }
-        }
-        
-        .main-container {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .start-btn {
-            position: relative;
-            padding: 25px 60px;
-            font-size: clamp(20px, 3vw, 32px);
-            font-weight: 900;
-            color: #fff;
-            background: linear-gradient(145deg, #ff2d55, #ff6b6b, #ff2d55);
-            background-size: 200% 200%;
-            border: none;
-            border-radius: 60px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            animation: btnPulse 2s ease-in-out infinite;
-            box-shadow: 
-                0 0 40px rgba(255, 45, 85, 0.3),
-                0 0 80px rgba(255, 45, 85, 0.15),
-                inset 0 2px 0 rgba(255, 255, 255, 0.2);
-        }
-        
-        .start-btn::before {
-            content: '';
-            position: absolute;
-            inset: -3px;
-            border-radius: 63px;
-            background: linear-gradient(145deg, #ff2d55, #ff6b6b, #ff2d55);
-            background-size: 200% 200%;
-            z-index: -1;
-            filter: blur(20px);
-            opacity: 0.6;
-            animation: btnPulse 2s ease-in-out infinite;
-        }
-        
-        .start-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 
-                0 0 60px rgba(255, 45, 85, 0.5),
-                0 0 120px rgba(255, 45, 85, 0.25),
-                inset 0 2px 0 rgba(255, 255, 255, 0.3);
-        }
-        
-        .start-btn:active {
-            transform: scale(0.95);
-        }
-        
-        @keyframes btnPulse {
-            0%, 100% {
-                background-position: 0% 50%;
-                box-shadow: 0 0 40px rgba(255, 45, 85, 0.3), 0 0 80px rgba(255, 45, 85, 0.15);
+        // Ждём загрузки
+        this.audio.addEventListener('canplaythrough', () => {
+            this.ready = true;
+            console.log('Музыка загружена');
+            // Если нужно играть - запускаем
+            if (savedState === 'playing') {
+                this.play();
             }
-            50% {
-                background-position: 100% 50%;
-                box-shadow: 0 0 60px rgba(255, 45, 85, 0.5), 0 0 120px rgba(255, 45, 85, 0.25);
+        });
+        
+        // Восстанавливаем время
+        if (savedTime) {
+            this.audio.currentTime = parseFloat(savedTime);
+        }
+        
+        // Сохраняем время каждые 2 секунды
+        setInterval(() => {
+            if (this.audio && !this.audio.paused && this.audio.currentTime > 0) {
+                localStorage.setItem('music_time', this.audio.currentTime);
+                localStorage.setItem('music_state', 'playing');
             }
-        }
+        }, 2000);
         
-        .music-toggle {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 100;
-            padding: 12px 18px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        this.initialized = true;
         
-        .music-toggle:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-    </style>
-</head>
-<body>
-    <div class="fog-bg"></div>
-    <div class="fog-layer"></div>
-    <div class="stars" id="stars"></div>
-    
-    <div class="main-container">
-        <button class="start-btn" onclick="goToAuth()">
-            Начать лудо приключение
-        </button>
-    </div>
-    
-    <button class="music-toggle" id="musicToggle" onclick="toggleMusic()">🔊</button>
-    
-    <script>
-        (function createStars() {
-            const container = document.getElementById('stars');
-            for (let i = 0; i < 100; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.width = (1 + Math.random() * 2) + 'px';
-                star.style.height = star.style.width;
-                star.style.animationDelay = Math.random() * 5 + 's';
-                star.style.animationDuration = (2 + Math.random() * 4) + 's';
-                container.appendChild(star);
+        // Автозапуск при первом клике
+        document.addEventListener('click', () => {
+            if (!this.isPlaying && this.ready) {
+                this.play();
             }
-        })();
+        }, { once: false });
+    }
+
+    play() {
+        if (!this.audio || !this.ready) return;
         
-        function goToAuth() {
-            // Запоминаем, что музыка должна играть
-            localStorage.setItem('music_state', 'playing');
-            window.location.href = 'auth.html';
+        const playPromise = this.audio.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                this.isPlaying = true;
+                localStorage.setItem('music_state', 'playing');
+            }).catch(() => {
+                console.log('Автозапуск заблокирован');
+            });
         }
-        
-        // Кнопка вкл/выкл музыки
-        function toggleMusic() {
-            if (music.isPlaying) {
-                music.pause();
-                document.getElementById('musicToggle').textContent = '🔇';
-            } else {
-                music.play();
-                document.getElementById('musicToggle').textContent = '🔊';
-            }
-        }
-        
-        // Обновляем иконку при загрузке
-        window.onload = function() {
-            setTimeout(() => {
-                if (music.isPlaying) {
-                    document.getElementById('musicToggle').textContent = '🔊';
-                } else {
-                    document.getElementById('musicToggle').textContent = '🔇';
+    }
+
+    pause() {
+        if (!this.audio) return;
+        this.audio.pause();
+        this.isPlaying = false;
+        localStorage.setItem('music_state', 'paused');
+    }
+
+    stop() {
+        if (!this.audio) return;
+        this.audio.pause();
+        this.audio.currentTime = 0;
+        this.isPlaying = false;
+        localStorage.removeItem('music_time');
+        localStorage.removeItem('music_state');
+    }
+
+    // Принудительно включаем (для страницы входа)
+    forcePlay() {
+        if (this.audio && this.ready) {
+            this.play();
+        } else {
+            // Если ещё не загружено - ждём
+            const checkReady = setInterval(() => {
+                if (this.ready) {
+                    this.play();
+                    clearInterval(checkReady);
                 }
             }, 100);
-            
-            // Начинаем играть после первого клика (автозапуск)
-            document.addEventListener('click', function firstClick() {
-                if (!music.isPlaying) {
-                    music.play();
-                    document.getElementById('musicToggle').textContent = '🔊';
-                }
-                document.removeEventListener('click', firstClick);
-            });
-        };
-    </script>
-</body>
-</html>
+        }
+    }
+}
+
+// Создаём глобальный экземпляр
+const music = new AudioManager();
+
+// Инициализируем сразу
+music.init();
