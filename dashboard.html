@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Игровой кабинет</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         * {
             margin: 0;
@@ -159,13 +156,9 @@
     </div>
     
     <script>
-        const SUPABASE_URL = 'https://xzraipvexmgxmixjrkdj.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_UHM3a7u9rKD-_KS6n5fBUw_4zBHqaAh';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        // Звезды
-        function createStars() {
+        (function createStars() {
             const container = document.getElementById('stars');
+            if (!container) return;
             for (let i = 0; i < 80; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
@@ -177,33 +170,20 @@
                 star.style.animationDuration = (2 + Math.random() * 4) + 's';
                 container.appendChild(star);
             }
-        }
-        createStars();
+        })();
         
-        // Проверка авторизации
-        async function checkAuth() {
-            const { data, error } = await supabase.auth.getUser();
-            
-            if (error || !data.user) {
-                window.location.href = 'auth.html';
-                return;
-            }
-            
-            // Показываем никнейм
-            const username = localStorage.getItem('current_user') || data.user.email?.replace('@temp.local', '') || 'Игрок';
+        const username = localStorage.getItem('current_user');
+        if (!username) {
+            window.location.href = 'auth.html';
+        } else {
             document.getElementById('username').textContent = username;
         }
         
-        // Выход
-        async function logout() {
-            await supabase.auth.signOut();
-            localStorage.removeItem('supabase_session');
+        function logout() {
             localStorage.removeItem('current_user');
+            localStorage.removeItem('user_id');
             window.location.href = 'index.html';
         }
-        
-        // Запускаем проверку
-        checkAuth();
     </script>
 </body>
 </html>
