@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Профиль</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            background: #0a0e27;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .fog-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(30, 60, 180, 0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(60, 30, 180, 0.3) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 100%, rgba(20, 100, 200, 0.2) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0e27 0%, #1a1a4e 50%, #0a0e27 100%);
+        }
+        
+        .fog-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .fog-layer::before,
+        .fog-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 30% 60%, rgba(100, 150, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 40%, rgba(80, 120, 255, 0.06) 0%, transparent 50%);
+            animation: fogMove 20s ease-in-out infinite alternate;
+        }
+        
+        .fog-layer::after {
+            background: 
+                radial-gradient(ellipse at 50% 80%, rgba(60, 100, 255, 0.05) 0%, transparent 40%);
+            animation-duration: 25s;
+            animation-direction: alternate-reverse;
+        }
+        
+        @keyframes fogMove {
+            0% { transform: translateX(-5%) scale(1); opacity: 0.6; }
+            100% { transform: translateX(5%) scale(1.1); opacity: 1; }
+        }
+        
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .profile-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 40px 35px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 22px;
+            cursor: pointer;
+            transition: color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .back-btn:hover {
+            color: #fff;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ff2d55, #ff6b6b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: #fff;
+            font-weight: 700;
+            margin: 0 auto 15px;
+            box-shadow: 0 0 40px rgba(255, 45, 85, 0.2);
+        }
+        
+        .profile-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .profile-sub {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+        
+        .info-value {
+            color: #fff;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .info-value.balance {
+            color: #ffd700;
+            font-size: 20px;
+        }
+        
+        .topup-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .topup-label {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .topup-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .topup-input {
+            flex: 1;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 18px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .topup-input:focus {
+            border-color: #ff2d55;
+            box-shadow: 0 0 20px rgba(255, 45, 85, 0.15);
+        }
+        
+        .topup-input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .topup-btn {
+            padding: 14px 25px;
+            background: linear-gradient(145deg, #ff2d55, #ff6b6b);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 30px rgba(255, 45, 85, 0.2);
+            -webkit-tap-highlight-color: transparent;
+            white-space: nowrap;
+        }
+        
+        .topup-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 50px rgba(255, 45, 85, 0.3);
+        }
+        
+        .topup-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .topup-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .topup-rate {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .topup-rate span {
+            color: #ffd700;
+        }
+        
+        /* ===== АДАПТАЦИЯ ===== */
+        @media (max-width: 480px) {
+            .profile-container {
+                padding: 30px 20px;
+                border-radius: 20px;
+                margin: 15px;
+            }
+            
+            .profile-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+            }
+            
+            .profile-title {
+                font-size: 20px;
+            }
+            
+            .topup-btn {
+                padding: 12px 18px;
+                font-size: 14px;
+            }
+            
+            .topup-input {
+                font-size: 16px;
+                padding: 12px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="fog-bg"></div>
+    <div class="fog-layer"></div>
+    <div class="stars" id="stars"></div>
+    
+    <div class="profile-container">
+        <button class="back-btn" onclick="goBack()">←</button>
+        
+        <div class="profile-avatar" id="avatar">🤠</div>
+        <div class="profile-title" id="username">Игрок</div>
+        <div class="profile-sub">Ваш игровой профиль</div>
+        
+        <div class="info-row">
+            <span class="info-label">💰 Баланс</span>
+            <span class="info-value balance" id="balance">1000</span>
+        </div>
+        
+        <div class="info-row">
+            <span class="info-label">👤 ID</span>
+            <span class="info-value" id="userId">—</span>
+        </div>
+        
+        <div class="topup-section">
+            <div class="topup-label">Пополнить баланс</div>
+            <div class="topup-row">
+                <input type="number" class="topup-input" id="topupAmount" placeholder="Сумма в ₴" min="1" step="1" />
+                <button class="topup-btn" id="topupBtn" onclick="topUp()">Пополнить</button>
+            </div>
+            <div class="topup-rate">💎 1 ₴ = <span>1 Лудо-коин</span></div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================================
+        // 1. ЗВЁЗДЫ
+        // ============================================================
+        (function createStars() {
+            const container = document.getElementById('stars');
+            for (let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = (1 + Math.random() * 2) + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 5 + 's';
+                star.style.animationDuration = (2 + Math.random() * 4) + 's';
+                container.appendChild(star);
+            }
+        })();
+        
+        // ============================================================
+        // 2. SUPABASE
+        // ============================================================
+        const SUPABASE_URL = 'https://xzraipvexmgxmixjrkdj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_UHM3a7u9rKD-_KS6n5fBUw_4zBHqaAh';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // ============================================================
+        // 3. ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
+        // ============================================================
+        const username = localStorage.getItem('current_user');
+        const userId = localStorage.getItem('user_id');
+        let balance = parseInt(localStorage.getItem('user_balance')) || 1000;
+        
+        if (!username) {
+            window.location.href = 'index.html';
+        }
+        
+        document.getElementById('username').textContent = username;
+        document.getElementById('avatar').textContent = username.charAt(0).toUpperCase();
+        document.getElementById('balance').textContent = balance;
+        document.getElementById('userId').textContent = userId || '—';
+        
+        // ============================================================
+        // 4. НАЗАД
+        // ============================================================
+        function goBack() {
+            window.location.href = 'dashboard.html';
+        }
+        
+        // ============================================================
+        // 5. ПОПОЛНЕНИЕ
+        // ============================================================
+        async function topUp() {
+            const input = document.getElementById('topupAmount');
+            const amount = parseInt(input.value);
+            const btn = document.getElementById('topupBtn');
+            
+            if (!amount || amount < 1) {
+                alert('Введите сумму пополнения (минимум 1 ₴)');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '⏳...';
+            
+            try {
+                // ============================================================
+                // СОЗДАНИЕ СЧЕТА В MONOBANK
+                // ============================================================
+                const MONO_TOKEN = 'ВАШ_ТОКЕН_MONOBANK'; // ЗАМЕНИТЕ НА СВОЙ!
+                
+                const response = await fetch('https://api.monobank.ua/api/merchant/invoice/create', {
+                    method: 'POST',
+                    headers: {
+                        'X-Token': MONO_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: amount * 100, // В копейках
+                        ccy: 980, // UAH
+                        redirectUrl: window.location.origin + '/payment-success.html?amount=' + amount,
+                        webHookUrl: window.location.origin + '/webhook.php', // Для автоматического зачисления
+                        merchantPaymInfo: {
+                            destination: 'Пополнение баланса ЛУДО',
+                            comment: 'Пополнение для ' + username
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.errCode || 'Ошибка создания счета');
+                }
+                
+                // Сохраняем сумму в localStorage для обработки после оплаты
+                localStorage.setItem('pending_topup', amount);
+                localStorage.setItem('pending_invoice', data.invoiceId);
+                
+                // Перенаправляем на страницу оплаты Monobank
+                window.location.href = data.pageUrl;
+                
+            } catch (error) {
+                alert('❌ Ошибка: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = 'Пополнить';
+            }
+        }
+        
+        // ============================================================
+        // 6. ПРОВЕРКА ПЛАТЕЖА (если вернулись после оплаты)
+        // ============================================================
+        (function checkPayment() {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get('status');
+            const amount = params.get('amount');
+            
+            if (status === 'success' && amount) {
+                const topupAmount = parseInt(amount);
+                const newBalance = balance + topupAmount;
+                
+                // Обновляем баланс в Supabase
+                supabaseClient
+                    .from('users')
+                    .update({ balance: newBalance })
+                    .eq('id', userId)
+                    .then(({ error }) => {
+                        if (!error) {
+                            localStorage.setItem('user_balance', newBalance);
+                            document.getElementById('balance').textContent = newBalance;
+                            alert('✅ Пополнение на ' + topupAmount + ' ₴ успешно!');
+                            
+                            // Чистим параметры
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
+                    });
+            }
+        })();
+    </script>
+</body>
+</html>
