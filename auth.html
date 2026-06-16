@@ -408,6 +408,7 @@
             btn.textContent = '⏳ Регистрация...';
             
             try {
+                // Проверяем, существует ли пользователь
                 const { data: existing, error: checkError } = await supabaseClient
                     .from('users')
                     .select('username')
@@ -421,20 +422,14 @@
                     throw new Error('❌ Пользователь с таким никнеймом уже существует');
                 }
                 
-                const userId = crypto.randomUUID ? crypto.randomUUID() : 
-                    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                        const r = Math.random() * 16 | 0;
-                        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                        return v.toString(16);
-                    });
-                
-                const { error: insertError } = await supabaseClient
+                // Вставляем пользователя (id сгенерируется автоматически)
+                const { data, error: insertError } = await supabaseClient
                     .from('users')
                     .insert({
-                        id: userId,
                         username: username,
                         password: password
-                    });
+                    })
+                    .select();
                 
                 if (insertError) {
                     throw new Error('❌ Ошибка регистрации: ' + insertError.message);
@@ -483,7 +478,7 @@
             try {
                 const { data: user, error } = await supabaseClient
                     .from('users')
-                    .select('id, username')
+                    .select('id, username, balance')
                     .eq('username', username)
                     .eq('password', password);
                 
@@ -497,6 +492,7 @@
                 
                 localStorage.setItem('current_user', username);
                 localStorage.setItem('user_id', user[0].id);
+                localStorage.setItem('user_balance', user[0].balance || 1000);
                 
                 showSuccess('✅ Добро пожаловать, ' + username + '!');
                 
