@@ -4,10 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Лудо Приключение</title>
-    
-    <!-- Подключаем Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         * {
             margin: 0;
@@ -25,7 +21,6 @@
             overflow: hidden;
         }
         
-        /* Сине-туманный фон с анимацией */
         .fog-bg {
             position: fixed;
             inset: 0;
@@ -37,7 +32,6 @@
                 linear-gradient(180deg, #0a0e27 0%, #1a1a4e 50%, #0a0e27 100%);
         }
         
-        /* Плывущий туман */
         .fog-layer {
             position: fixed;
             inset: 0;
@@ -68,7 +62,27 @@
             100% { transform: translateX(5%) scale(1.1); opacity: 1; }
         }
         
-        /* Контейнер с кнопкой */
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        
         .main-container {
             position: relative;
             z-index: 10;
@@ -94,7 +108,6 @@
             text-transform: uppercase;
         }
         
-        /* Кнопка "Начать лудо приключение" */
         .start-btn {
             position: relative;
             padding: 25px 60px;
@@ -151,39 +164,13 @@
                 box-shadow: 0 0 60px rgba(255, 45, 85, 0.5), 0 0 120px rgba(255, 45, 85, 0.25);
             }
         }
-        
-        /* Мерцающие звезды на фоне */
-        .stars {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-        }
-        
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #fff;
-            border-radius: 50%;
-            animation: twinkle 3s ease-in-out infinite alternate;
-        }
-        
-        @keyframes twinkle {
-            0% { opacity: 0.2; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1.2); }
-        }
-        
-        /* Генерация звезд через JS */
     </style>
 </head>
 <body>
-    <!-- Фоновые слои -->
     <div class="fog-bg"></div>
     <div class="fog-layer"></div>
     <div class="stars" id="stars"></div>
     
-    <!-- Главный контент -->
     <div class="main-container">
         <h1 class="title">🎰 ЛУДО</h1>
         <p class="subtitle">Приключение начинается здесь</p>
@@ -195,7 +182,7 @@
     
     <script>
         // Генерация звезд
-        function createStars() {
+        (function createStars() {
             const container = document.getElementById('stars');
             for (let i = 0; i < 100; i++) {
                 const star = document.createElement('div');
@@ -208,10 +195,8 @@
                 star.style.animationDuration = (2 + Math.random() * 4) + 's';
                 container.appendChild(star);
             }
-        }
-        createStars();
+        })();
         
-        // Переход на страницу регистрации
         function goToAuth() {
             window.location.href = 'auth.html';
         }
