@@ -97,22 +97,6 @@
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
         }
         
-        .auth-title {
-            font-size: 32px;
-            font-weight: 900;
-            color: #fff;
-            text-align: center;
-            margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(100, 150, 255, 0.2);
-        }
-        
-        .auth-subtitle {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-        
         .auth-tabs {
             display: flex;
             gap: 10px;
@@ -261,9 +245,6 @@
     <div class="stars" id="stars"></div>
     
     <div class="auth-container">
-        <h1 class="auth-title">🎰 ЛУДО</h1>
-        <p class="auth-subtitle">Войди или создай аккаунт</p>
-        
         <div class="auth-tabs">
             <button class="auth-tab active" onclick="switchTab('login')">Вход</button>
             <button class="auth-tab" onclick="switchTab('register')">Регистрация</button>
@@ -274,33 +255,28 @@
         
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label>Никнейм</label>
-                <input type="text" id="loginUsername" placeholder="Введите никнейм" required />
+                <input type="text" id="loginUsername" placeholder="Никнейм" required />
             </div>
             <div class="form-group">
-                <label>Пароль</label>
-                <input type="password" id="loginPassword" placeholder="Введите пароль" required />
+                <input type="password" id="loginPassword" placeholder="Пароль" required />
             </div>
             <button type="submit" class="auth-btn" id="loginBtn">Войти</button>
         </form>
         
         <form id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
             <div class="form-group">
-                <label>Придумайте никнейм</label>
-                <input type="text" id="regUsername" placeholder="Например: KILLER228" required />
+                <input type="text" id="regUsername" placeholder="Никнейм" required />
             </div>
             <div class="form-group">
-                <label>Пароль</label>
-                <input type="password" id="regPassword" placeholder="Минимум 6 символов" required minlength="6" />
+                <input type="password" id="regPassword" placeholder="Пароль" required minlength="6" />
             </div>
             <div class="form-group">
-                <label>Подтвердите пароль</label>
-                <input type="password" id="regConfirmPassword" placeholder="Повторите пароль" required />
+                <input type="password" id="regConfirmPassword" placeholder="Подтвердите пароль" required />
             </div>
             <button type="submit" class="auth-btn" id="registerBtn">Зарегистрироваться</button>
         </form>
         
-        <a href="index.html" class="back-link">← Вернуться на главную</a>
+        <a href="index.html" class="back-link">← На главную</a>
     </div>
     
     <script>
@@ -389,12 +365,12 @@
             }
             
             if (username.length < 3) {
-                showError('❌ Никнейм должен быть минимум 3 символа');
+                showError('❌ Никнейм минимум 3 символа');
                 return;
             }
             
             if (password.length < 6) {
-                showError('❌ Пароль должен быть минимум 6 символов');
+                showError('❌ Пароль минимум 6 символов');
                 return;
             }
             
@@ -405,37 +381,34 @@
             
             const btn = document.getElementById('registerBtn');
             btn.disabled = true;
-            btn.textContent = '⏳ Регистрация...';
+            btn.textContent = '⏳...';
             
             try {
-                // Проверяем, существует ли пользователь
                 const { data: existing, error: checkError } = await supabaseClient
                     .from('users')
                     .select('username')
                     .eq('username', username);
                 
                 if (checkError) {
-                    throw new Error('❌ Ошибка проверки: ' + checkError.message);
+                    throw new Error('❌ Ошибка: ' + checkError.message);
                 }
                 
                 if (existing && existing.length > 0) {
-                    throw new Error('❌ Пользователь с таким никнеймом уже существует');
+                    throw new Error('❌ Никнейм занят');
                 }
                 
-                // Вставляем пользователя (id сгенерируется автоматически)
-                const { data, error: insertError } = await supabaseClient
+                const { error: insertError } = await supabaseClient
                     .from('users')
                     .insert({
                         username: username,
                         password: password
-                    })
-                    .select();
+                    });
                 
                 if (insertError) {
-                    throw new Error('❌ Ошибка регистрации: ' + insertError.message);
+                    throw new Error('❌ Ошибка: ' + insertError.message);
                 }
                 
-                showSuccess('✅ Регистрация успешна! Теперь войдите в аккаунт.');
+                showSuccess('✅ Регистрация успешна!');
                 
                 document.getElementById('regUsername').value = '';
                 document.getElementById('regPassword').value = '';
@@ -467,13 +440,13 @@
             const password = document.getElementById('loginPassword').value;
             
             if (!username || !password) {
-                showError('❌ Введите никнейм и пароль');
+                showError('❌ Введите данные');
                 return;
             }
             
             const btn = document.getElementById('loginBtn');
             btn.disabled = true;
-            btn.textContent = '⏳ Вход...';
+            btn.textContent = '⏳...';
             
             try {
                 const { data: user, error } = await supabaseClient
@@ -483,7 +456,7 @@
                     .eq('password', password);
                 
                 if (error) {
-                    throw new Error('❌ Ошибка входа: ' + error.message);
+                    throw new Error('❌ Ошибка: ' + error.message);
                 }
                 
                 if (!user || user.length === 0) {
@@ -494,7 +467,7 @@
                 localStorage.setItem('user_id', user[0].id);
                 localStorage.setItem('user_balance', user[0].balance || 1000);
                 
-                showSuccess('✅ Добро пожаловать, ' + username + '!');
+                showSuccess('✅ Добро пожаловать!');
                 
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
