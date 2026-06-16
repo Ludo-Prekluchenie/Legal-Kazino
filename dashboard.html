@@ -103,6 +103,13 @@
             text-shadow: 0 0 30px rgba(255, 45, 85, 0.3);
         }
         
+        .user-balance {
+            color: #ffd700;
+            font-size: 24px;
+            margin: 15px 0;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+        
         .sub-text {
             color: rgba(255, 255, 255, 0.3);
             font-size: 16px;
@@ -146,6 +153,7 @@
         <h1 class="welcome-text">
             Добро пожаловать, <span class="user-name" id="username">Игрок</span>! 🎰
         </h1>
+        <div class="user-balance">💰 Баланс: <span id="balance">1000</span> ₴</div>
         <p class="sub-text">Вы успешно вошли в систему</p>
         
         <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
@@ -173,15 +181,19 @@
         })();
         
         const username = localStorage.getItem('current_user');
+        const balance = localStorage.getItem('user_balance') || 1000;
+        
         if (!username) {
             window.location.href = 'auth.html';
         } else {
             document.getElementById('username').textContent = username;
+            document.getElementById('balance').textContent = balance;
         }
         
         function logout() {
             localStorage.removeItem('current_user');
             localStorage.removeItem('user_id');
+            localStorage.removeItem('user_balance');
             window.location.href = 'index.html';
         }
     </script>
