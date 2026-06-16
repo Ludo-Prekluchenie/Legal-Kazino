@@ -4,34 +4,39 @@ class AudioManager {
     constructor() {
         this.audio = null;
         this.isPlaying = false;
-        this.volume = 0.4;
         this.initialized = false;
+        this.ready = false;
     }
 
     init() {
         if (this.initialized) return;
         
-        // Проверяем, есть ли сохраненное состояние в localStorage
+        // Проверяем сохранённое состояние
         const savedTime = localStorage.getItem('music_time');
         const savedState = localStorage.getItem('music_state');
         
         this.audio = new Audio('voice.m4a');
         this.audio.loop = true;
-        this.audio.volume = this.volume;
+        this.audio.volume = 0.3; // Немного тише, чтобы не оглушать
+        
+        // Ждём загрузки
+        this.audio.addEventListener('canplaythrough', () => {
+            this.ready = true;
+            console.log('Музыка загружена');
+            // Если нужно играть - запускаем
+            if (savedState === 'playing') {
+                this.play();
+            }
+        });
         
         // Восстанавливаем время
         if (savedTime) {
             this.audio.currentTime = parseFloat(savedTime);
         }
         
-        // Восстанавливаем состояние
-        if (savedState === 'playing') {
-            this.play();
-        }
-        
         // Сохраняем время каждые 2 секунды
         setInterval(() => {
-            if (this.audio && !this.audio.paused) {
+            if (this.audio && !this.audio.paused && this.audio.currentTime > 0) {
                 localStorage.setItem('music_time', this.audio.currentTime);
                 localStorage.setItem('music_state', 'playing');
             }
@@ -39,26 +44,24 @@ class AudioManager {
         
         this.initialized = true;
         
-        // Автозапуск при первом взаимодействии с пользователем
+        // Автозапуск при первом клике
         document.addEventListener('click', () => {
-            if (!this.isPlaying && localStorage.getItem('music_state') === 'playing') {
+            if (!this.isPlaying && this.ready) {
                 this.play();
             }
         }, { once: false });
     }
 
     play() {
-        if (!this.audio) return;
+        if (!this.audio || !this.ready) return;
         
-        // Пытаемся играть, даже если не было взаимодействия
         const playPromise = this.audio.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 this.isPlaying = true;
                 localStorage.setItem('music_state', 'playing');
             }).catch(() => {
-                // Если браузер блокирует автозапуск, ничего не делаем
-                console.log('Автозапуск заблокирован браузером');
+                console.log('Автозапуск заблокирован');
             });
         }
     }
@@ -79,15 +82,23 @@ class AudioManager {
         localStorage.removeItem('music_state');
     }
 
-    setVolume(vol) {
-        this.volume = Math.max(0, Math.min(1, vol));
-        if (this.audio) {
-            this.audio.volume = this.volume;
+    // Принудительно включаем (для страницы входа)
+    forcePlay() {
+        if (this.audio && this.ready) {
+            this.play();
+        } else {
+            // Если ещё не загружено - ждём
+            const checkReady = setInterval(() => {
+                if (this.ready) {
+                    this.play();
+                    clearInterval(checkReady);
+                }
+            }, 100);
         }
     }
 }
 
-// Создаем глобальный экземпляр
+// Создаём глобальный экземпляр
 const music = new AudioManager();
 
 // Инициализируем сразу
