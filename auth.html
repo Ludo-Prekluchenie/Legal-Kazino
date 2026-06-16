@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Игровой кабинет</title>
+    <title>Вход / Регистрация</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             min-height: 100vh;
             display: flex;
@@ -16,6 +21,7 @@
             background: #0a0e27;
             overflow: hidden;
         }
+        
         .fog-bg {
             position: fixed;
             inset: 0;
@@ -26,12 +32,14 @@
                 radial-gradient(ellipse at 50% 100%, rgba(20, 100, 200, 0.2) 0%, transparent 50%),
                 linear-gradient(180deg, #0a0e27 0%, #1a1a4e 50%, #0a0e27 100%);
         }
+        
         .fog-layer {
             position: fixed;
             inset: 0;
             z-index: 0;
             pointer-events: none;
         }
+        
         .fog-layer::before,
         .fog-layer::after {
             content: '';
@@ -42,22 +50,26 @@
                 radial-gradient(ellipse at 70% 40%, rgba(80, 120, 255, 0.06) 0%, transparent 50%);
             animation: fogMove 20s ease-in-out infinite alternate;
         }
+        
         .fog-layer::after {
             background: 
                 radial-gradient(ellipse at 50% 80%, rgba(60, 100, 255, 0.05) 0%, transparent 40%);
             animation-duration: 25s;
             animation-direction: alternate-reverse;
         }
+        
         @keyframes fogMove {
             0% { transform: translateX(-5%) scale(1); opacity: 0.6; }
             100% { transform: translateX(5%) scale(1.1); opacity: 1; }
         }
+        
         .stars {
             position: fixed;
             inset: 0;
             z-index: 0;
             pointer-events: none;
         }
+        
         .star {
             position: absolute;
             width: 2px;
@@ -66,55 +78,180 @@
             border-radius: 50%;
             animation: twinkle 3s ease-in-out infinite alternate;
         }
+        
         @keyframes twinkle {
             0% { opacity: 0.2; transform: scale(0.8); }
             100% { opacity: 1; transform: scale(1.2); }
         }
-        .dashboard-container {
+        
+        .auth-container {
             position: relative;
             z-index: 10;
-            text-align: center;
-            padding: 40px;
-        }
-        .welcome-text {
-            font-size: clamp(28px, 4vw, 48px);
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 40px rgba(100, 150, 255, 0.2);
-            margin-bottom: 10px;
-        }
-        .user-name {
-            color: #ff6b6b;
-            text-shadow: 0 0 30px rgba(255, 45, 85, 0.3);
-        }
-        .sub-text {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 16px;
-            margin-bottom: 30px;
-        }
-        .logout-btn {
-            padding: 12px 30px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
-            color: rgba(255, 255, 255, 0.6);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        }
+        
+        .auth-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(100, 150, 255, 0.2);
+        }
+        
+        .auth-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
             font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 5px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.4);
         }
-        .logout-btn:hover {
-            background: rgba(255, 45, 85, 0.2);
+        
+        .auth-tab.active {
+            background: linear-gradient(145deg, #ff2d55, #ff6b6b);
+            color: #fff;
+            box-shadow: 0 0 30px rgba(255, 45, 85, 0.3);
+        }
+        
+        .auth-tab:hover:not(.active) {
+            color: #fff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            outline: none;
+        }
+        
+        .form-group input:focus {
             border-color: #ff2d55;
-            color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 45, 85, 0.15);
         }
-        .coming-soon {
-            margin-top: 40px;
-            padding: 30px;
-            border: 2px dashed rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
+        
+        .form-group input::placeholder {
             color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(145deg, #ff2d55, #ff6b6b);
+            border: none;
+            border-radius: 16px;
+            color: #fff;
             font-size: 18px;
-            letter-spacing: 2px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            box-shadow: 0 0 30px rgba(255, 45, 85, 0.2);
+        }
+        
+        .auth-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 50px rgba(255, 45, 85, 0.3);
+        }
+        
+        .auth-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-error {
+            background: rgba(255, 45, 85, 0.15);
+            border: 1px solid rgba(255, 45, 85, 0.2);
+            color: #ff6b6b;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .auth-error.show {
+            display: block;
+        }
+        
+        .auth-success {
+            background: rgba(46, 213, 115, 0.15);
+            border: 1px solid rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .auth-success.show {
+            display: block;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 20px;
+            transition: color 0.3s;
+        }
+        
+        .back-link:hover {
+            color: rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
@@ -123,20 +260,60 @@
     <div class="fog-layer"></div>
     <div class="stars" id="stars"></div>
     
-    <div class="dashboard-container">
-        <h1 class="welcome-text">
-            Добро пожаловать, <span class="user-name" id="username">Игрок</span>! 🎰
-        </h1>
-        <p class="sub-text">Вы успешно вошли в систему</p>
+    <div class="auth-container">
+        <h1 class="auth-title">🎰 ЛУДО</h1>
+        <p class="auth-subtitle">Войди или создай аккаунт</p>
         
-        <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
-        
-        <div class="coming-soon">
-            ⏳ Скоро здесь появится игра...
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchTab('login')">Вход</button>
+            <button class="auth-tab" onclick="switchTab('register')">Регистрация</button>
         </div>
+        
+        <div class="auth-error" id="authError"></div>
+        <div class="auth-success" id="authSuccess"></div>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Никнейм</label>
+                <input type="text" id="loginUsername" placeholder="Введите никнейм" required />
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="loginPassword" placeholder="Введите пароль" required />
+            </div>
+            <button type="submit" class="auth-btn" id="loginBtn">Войти</button>
+        </form>
+        
+        <form id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
+            <div class="form-group">
+                <label>Придумайте никнейм</label>
+                <input type="text" id="regUsername" placeholder="Например: KILLER228" required />
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="regPassword" placeholder="Минимум 6 символов" required minlength="6" />
+            </div>
+            <div class="form-group">
+                <label>Подтвердите пароль</label>
+                <input type="password" id="regConfirmPassword" placeholder="Повторите пароль" required />
+            </div>
+            <button type="submit" class="auth-btn" id="registerBtn">Зарегистрироваться</button>
+        </form>
+        
+        <a href="index.html" class="back-link">← Вернуться на главную</a>
     </div>
     
     <script>
+        // ============================================================
+        // НАСТРОЙКИ SUPABASE
+        // ============================================================
+        const SUPABASE_URL = 'https://xzraipvexmgxmixjrkdj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_UHM3a7u9rKD-_KS6n5fBUw_4zBHqaAh';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // ============================================================
+        // ЗВЕЗДЫ
+        // ============================================================
         (function createStars() {
             const container = document.getElementById('stars');
             if (!container) return;
@@ -153,20 +330,195 @@
             }
         })();
         
-        // Проверка авторизации
-        const username = localStorage.getItem('current_user');
-        if (!username) {
-            window.location.href = 'auth.html';
-        } else {
-            document.getElementById('username').textContent = username;
+        // ============================================================
+        // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+        // ============================================================
+        function showError(message) {
+            const el = document.getElementById('authError');
+            document.getElementById('authSuccess').classList.remove('show');
+            el.textContent = message;
+            el.classList.add('show');
         }
         
-        // Выход
-        function logout() {
-            localStorage.removeItem('current_user');
-            localStorage.removeItem('user_id');
-            window.location.href = 'index.html';
+        function showSuccess(message) {
+            const el = document.getElementById('authSuccess');
+            document.getElementById('authError').classList.remove('show');
+            el.textContent = message;
+            el.classList.add('show');
         }
+        
+        function hideMessages() {
+            document.getElementById('authError').classList.remove('show');
+            document.getElementById('authSuccess').classList.remove('show');
+        }
+        
+        // ============================================================
+        // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+        // ============================================================
+        function switchTab(tab) {
+            hideMessages();
+            
+            const tabs = document.querySelectorAll('.auth-tab');
+            tabs.forEach(el => el.classList.remove('active'));
+            
+            if (tab === 'login') {
+                document.querySelector('.auth-tab:first-child').classList.add('active');
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            } else {
+                document.querySelector('.auth-tab:last-child').classList.add('active');
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+            }
+        }
+        
+        // ============================================================
+        // РЕГИСТРАЦИЯ
+        // ============================================================
+        async function handleRegister(event) {
+            event.preventDefault();
+            hideMessages();
+            
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            if (!username) {
+                showError('❌ Введите никнейм');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showError('❌ Никнейм должен быть минимум 3 символа');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('❌ Пароль должен быть минимум 6 символов');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('❌ Пароли не совпадают');
+                return;
+            }
+            
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Регистрация...';
+            
+            try {
+                const { data: existing, error: checkError } = await supabaseClient
+                    .from('users')
+                    .select('username')
+                    .eq('username', username);
+                
+                if (checkError) {
+                    throw new Error('❌ Ошибка проверки: ' + checkError.message);
+                }
+                
+                if (existing && existing.length > 0) {
+                    throw new Error('❌ Пользователь с таким никнеймом уже существует');
+                }
+                
+                const userId = crypto.randomUUID ? crypto.randomUUID() : 
+                    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        const r = Math.random() * 16 | 0;
+                        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                
+                const { error: insertError } = await supabaseClient
+                    .from('users')
+                    .insert({
+                        id: userId,
+                        username: username,
+                        password: password
+                    });
+                
+                if (insertError) {
+                    throw new Error('❌ Ошибка регистрации: ' + insertError.message);
+                }
+                
+                showSuccess('✅ Регистрация успешна! Теперь войдите в аккаунт.');
+                
+                document.getElementById('regUsername').value = '';
+                document.getElementById('regPassword').value = '';
+                document.getElementById('regConfirmPassword').value = '';
+                
+                setTimeout(() => {
+                    switchTab('login');
+                    document.getElementById('loginUsername').value = username;
+                    document.getElementById('loginPassword').value = '';
+                    hideMessages();
+                }, 1500);
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Зарегистрироваться';
+            }
+        }
+        
+        // ============================================================
+        // ВХОД
+        // ============================================================
+        async function handleLogin(event) {
+            event.preventDefault();
+            hideMessages();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showError('❌ Введите никнейм и пароль');
+                return;
+            }
+            
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Вход...';
+            
+            try {
+                const { data: user, error } = await supabaseClient
+                    .from('users')
+                    .select('id, username')
+                    .eq('username', username)
+                    .eq('password', password);
+                
+                if (error) {
+                    throw new Error('❌ Ошибка входа: ' + error.message);
+                }
+                
+                if (!user || user.length === 0) {
+                    throw new Error('❌ Неверный никнейм или пароль');
+                }
+                
+                localStorage.setItem('current_user', username);
+                localStorage.setItem('user_id', user[0].id);
+                
+                showSuccess('✅ Добро пожаловать, ' + username + '!');
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Войти';
+            }
+        }
+        
+        // Проверка авторизации
+        (function checkAuth() {
+            const user = localStorage.getItem('current_user');
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        })();
     </script>
 </body>
 </html>
