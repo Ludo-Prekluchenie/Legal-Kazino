@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Игровой кабинет</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            background: #0a0e27;
+            overflow: hidden;
+        }
+        
+        .fog-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(30, 60, 180, 0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(60, 30, 180, 0.3) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 100%, rgba(20, 100, 200, 0.2) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0e27 0%, #1a1a4e 50%, #0a0e27 100%);
+        }
+        
+        .fog-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .fog-layer::before,
+        .fog-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 30% 60%, rgba(100, 150, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 40%, rgba(80, 120, 255, 0.06) 0%, transparent 50%);
+            animation: fogMove 20s ease-in-out infinite alternate;
+        }
+        
+        .fog-layer::after {
+            background: 
+                radial-gradient(ellipse at 50% 80%, rgba(60, 100, 255, 0.05) 0%, transparent 40%);
+            animation-duration: 25s;
+            animation-direction: alternate-reverse;
+        }
+        
+        @keyframes fogMove {
+            0% { transform: translateX(-5%) scale(1); opacity: 0.6; }
+            100% { transform: translateX(5%) scale(1.1); opacity: 1; }
+        }
+        
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .dashboard-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .welcome-text {
+            font-size: clamp(28px, 4vw, 48px);
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(100, 150, 255, 0.2);
+            margin-bottom: 10px;
+        }
+        
+        .user-name {
+            color: #ff6b6b;
+            text-shadow: 0 0 30px rgba(255, 45, 85, 0.3);
+        }
+        
+        .sub-text {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .logout-btn {
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 45, 85, 0.2);
+            border-color: #ff2d55;
+            color: #ff6b6b;
+        }
+        
+        .coming-soon {
+            margin-top: 40px;
+            padding: 30px;
+            border: 2px dashed rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="fog-bg"></div>
+    <div class="fog-layer"></div>
+    <div class="stars" id="stars"></div>
+    
+    <div class="dashboard-container">
+        <h1 class="welcome-text">
+            Добро пожаловать, <span class="user-name" id="username">Игрок</span>! 🎰
+        </h1>
+        <p class="sub-text">Вы успешно вошли в систему</p>
+        
+        <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
+        
+        <div class="coming-soon">
+            ⏳ Скоро здесь появится игра...
+        </div>
+    </div>
+    
+    <script>
+        const SUPABASE_URL = 'https://xzraipvexmgxmixjrkdj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_UHM3a7u9rKD-_KS6n5fBUw_4zBHqaAh';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Звезды
+        function createStars() {
+            const container = document.getElementById('stars');
+            for (let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = (1 + Math.random() * 2) + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 5 + 's';
+                star.style.animationDuration = (2 + Math.random() * 4) + 's';
+                container.appendChild(star);
+            }
+        }
+        createStars();
+        
+        // Проверка авторизации
+        async function checkAuth() {
+            const { data, error } = await supabase.auth.getUser();
+            
+            if (error || !data.user) {
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            // Показываем никнейм
+            const username = localStorage.getItem('current_user') || data.user.email?.replace('@temp.local', '') || 'Игрок';
+            document.getElementById('username').textContent = username;
+        }
+        
+        // Выход
+        async function logout() {
+            await supabase.auth.signOut();
+            localStorage.removeItem('supabase_session');
+            localStorage.removeItem('current_user');
+            window.location.href = 'index.html';
+        }
+        
+        // Запускаем проверку
+        checkAuth();
+    </script>
+</body>
+</html>
