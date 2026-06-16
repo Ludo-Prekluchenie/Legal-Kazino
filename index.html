@@ -117,12 +117,11 @@
         }
         
         .loader-text {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 22px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 18px;
             margin-top: 30px;
             letter-spacing: 3px;
             font-family: 'Arial', sans-serif;
-            font-weight: 300;
         }
         
         .loader-progress {
@@ -237,7 +236,6 @@
         }
         
         .auth-container {
-            position: relative;
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -252,22 +250,6 @@
         @keyframes slideUp {
             0% { transform: translateY(30px); opacity: 0; }
             100% { transform: translateY(0); opacity: 1; }
-        }
-        
-        .close-auth {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 28px;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-        
-        .close-auth:hover {
-            color: #fff;
         }
         
         .auth-tabs {
@@ -389,6 +371,26 @@
             display: block;
         }
         
+        .close-auth {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-auth:hover {
+            color: #fff;
+        }
+        
+        .auth-container {
+            position: relative;
+        }
+        
         /* ===== DASHBOARD (после входа) ===== */
         .dashboard-container {
             position: relative;
@@ -464,7 +466,7 @@
     <!-- ===== ЗАГРУЗОЧНЫЙ ЭКРАН ===== -->
     <div class="loader-overlay" id="loader">
         <div class="loader-spinner"></div>
-        <div class="loader-text">Загрузка сайта...</div>
+        <div class="loader-text">Загрузка музыки...</div>
         <div class="loader-progress">
             <div class="loader-progress-bar" id="progressBar"></div>
         </div>
