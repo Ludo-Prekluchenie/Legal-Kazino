@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Оплата прошла</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            background: #0a0e27;
+            overflow: hidden;
+        }
+        
+        .fog-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(30, 60, 180, 0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(60, 30, 180, 0.3) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 100%, rgba(20, 100, 200, 0.2) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0e27 0%, #1a1a4e 50%, #0a0e27 100%);
+        }
+        
+        .fog-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .fog-layer::before,
+        .fog-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 30% 60%, rgba(100, 150, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 40%, rgba(80, 120, 255, 0.06) 0%, transparent 50%);
+            animation: fogMove 20s ease-in-out infinite alternate;
+        }
+        
+        .fog-layer::after {
+            background: 
+                radial-gradient(ellipse at 50% 80%, rgba(60, 100, 255, 0.05) 0%, transparent 40%);
+            animation-duration: 25s;
+            animation-direction: alternate-reverse;
+        }
+        
+        @keyframes fogMove {
+            0% { transform: translateX(-5%) scale(1); opacity: 0.6; }
+            100% { transform: translateX(5%) scale(1.1); opacity: 1; }
+        }
+        
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .success-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s ease infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        .success-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #2ed573;
+            margin-bottom: 10px;
+        }
+        
+        .success-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .success-btn {
+            padding: 16px 40px;
+            background: linear-gradient(145deg, #ff2d55, #ff6b6b);
+            border: none;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .success-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .success-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="fog-bg"></div>
+    <div class="fog-layer"></div>
+    <div class="stars" id="stars"></div>
+    
+    <div class="success-container">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Оплата прошла!</div>
+        <div class="success-text">Ваш баланс успешно пополнен</div>
+        <button class="success-btn" onclick="goToProfile()">Вернуться в профиль</button>
+    </div>
+    
+    <script>
+        (function createStars() {
+            const container = document.getElementById('stars');
+            for (let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = (1 + Math.random() * 2) + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 5 + 's';
+                star.style.animationDuration = (2 + Math.random() * 4) + 's';
+                container.appendChild(star);
+            }
+        })();
+        
+        function goToProfile() {
+            window.location.href = 'profile.html';
+        }
+        
+        // Автоматический переход через 3 секунды
+        setTimeout(goToProfile, 3000);
+    </script>
+</body>
+</html>
