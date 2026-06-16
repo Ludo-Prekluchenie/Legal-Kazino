@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Вход / Регистрация</title>
     
-    <!-- Подключаем Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -25,7 +24,6 @@
             overflow: hidden;
         }
         
-        /* Такой же сине-туманный фон */
         .fog-bg {
             position: fixed;
             inset: 0;
@@ -88,7 +86,6 @@
             100% { opacity: 1; transform: scale(1.2); }
         }
         
-        /* Карточка авторизации */
         .auth-container {
             position: relative;
             z-index: 10;
@@ -183,10 +180,6 @@
             color: rgba(255, 255, 255, 0.2);
         }
         
-        .form-group.hidden {
-            display: none;
-        }
-        
         .auth-btn {
             width: 100%;
             padding: 16px;
@@ -250,23 +243,19 @@
     </style>
 </head>
 <body>
-    <!-- Фоновые слои -->
     <div class="fog-bg"></div>
     <div class="fog-layer"></div>
     <div class="stars" id="stars"></div>
     
-    <!-- Карточка -->
     <div class="auth-container">
         <h1 class="auth-title">🎰 ЛУДО</h1>
         <p class="auth-subtitle">Войди или создай аккаунт</p>
         
-        <!-- Вкладки -->
         <div class="auth-tabs">
-            <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">Вход</button>
-            <button class="auth-tab" data-tab="register" onclick="switchTab('register')">Регистрация</button>
+            <button class="auth-tab active" onclick="switchTab('login')">Вход</button>
+            <button class="auth-tab" onclick="switchTab('register')">Регистрация</button>
         </div>
         
-        <!-- Ошибка -->
         <div class="auth-error" id="authError"></div>
         
         <!-- Форма входа -->
@@ -282,7 +271,7 @@
             <button type="submit" class="auth-btn" id="loginBtn">Войти</button>
         </form>
         
-        <!-- Форма регистрации (скрыта по умолчанию) -->
+        <!-- Форма регистрации -->
         <form id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
             <div class="form-group">
                 <label>Никнейм</label>
@@ -303,16 +292,19 @@
     </div>
     
     <script>
-        // ====== 1. НАСТРОЙКИ SUPABASE ======
-        // ⚠️ ЗАМЕНИТЕ ЭТИ ДАННЫЕ НА СВОИ!
-        const SUPABASE_URL = 'https://xzraipvexmgxmixjrkdj.supabase.co'; // Ваш Project URL
-        const SUPABASE_KEY = 'sb_publishable_UHM3a7u9rKD-_KS6n5fBUw_4zBHqaAh'; // Ваш Publishable key
+        // ============================================================
+        // 1. НАСТРОЙКИ SUPABASE
+        // ============================================================
+        const SUPABASE_URL = 'https://xzraipvexmgxmixjrkdj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_UHM3a7u9rKD-_KS6n5fBUw_4zBHqaAh';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        // ====== 2. ЗВЕЗДЫ ======
-        function createStars() {
+        // ============================================================
+        // 2. ЗВЕЗДЫ
+        // ============================================================
+        (function createStars() {
             const container = document.getElementById('stars');
+            if (!container) return;
             for (let i = 0; i < 80; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
@@ -324,38 +316,41 @@
                 star.style.animationDuration = (2 + Math.random() * 4) + 's';
                 container.appendChild(star);
             }
-        }
-        createStars();
+        })();
         
-        // ====== 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ======
+        // ============================================================
+        // 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+        // ============================================================
         function switchTab(tab) {
-            // Обновляем вкладки
-            document.querySelectorAll('.auth-tab').forEach(el => {
-                el.classList.remove('active');
-            });
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            const tabs = document.querySelectorAll('.auth-tab');
+            tabs.forEach(el => el.classList.remove('active'));
             
-            // Показываем нужную форму
             if (tab === 'login') {
+                document.querySelector('.auth-tab:first-child').classList.add('active');
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('registerForm').style.display = 'none';
             } else {
+                document.querySelector('.auth-tab:last-child').classList.add('active');
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('registerForm').style.display = 'block';
             }
             
-            // Прячем ошибку
             document.getElementById('authError').classList.remove('show');
         }
         
-        // ====== 4. ПОКАЗ ОШИБКИ ======
+        // ============================================================
+        // 4. ПОКАЗ ОШИБКИ
+        // ============================================================
         function showError(message) {
             const errorEl = document.getElementById('authError');
+            if (!errorEl) return;
             errorEl.textContent = message;
             errorEl.classList.add('show');
         }
         
-        // ====== 5. РЕГИСТРАЦИЯ ======
+        // ============================================================
+        // 5. РЕГИСТРАЦИЯ
+        // ============================================================
         async function handleRegister(event) {
             event.preventDefault();
             
@@ -363,7 +358,6 @@
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
             
-            // Проверки
             if (!username) {
                 showError('Введите никнейм');
                 return;
@@ -379,15 +373,14 @@
                 return;
             }
             
-            // Блокируем кнопку
             const btn = document.getElementById('registerBtn');
             btn.disabled = true;
             btn.textContent = 'Регистрация...';
             
             try {
-                // 1. Регистрируем пользователя в Supabase Auth
-                const { data: authData, error: authError } = await supabase.auth.signUp({
-                    email: username + '@temp.local', // Supabase требует email
+                // Регистрация в Supabase Auth
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: username + '@temp.local',
                     password: password,
                     options: {
                         data: {
@@ -396,29 +389,32 @@
                     }
                 });
                 
-                if (authError) throw new Error(authError.message);
+                if (error) {
+                    if (error.message.includes('User already registered')) {
+                        throw new Error('Пользователь с таким никнеймом уже существует');
+                    }
+                    throw new Error(error.message);
+                }
                 
-                // 2. Проверяем, что пользователь создан
-                if (!authData.user) {
+                if (!data.user) {
                     throw new Error('Ошибка при создании пользователя');
                 }
                 
-                // 3. Добавляем запись в таблицу users (сработает триггер)
-                // Но на всякий случай добавим вручную
-                const { error: insertError } = await supabase
+                // Добавляем запись в таблицу users
+                const { error: insertError } = await supabaseClient
                     .from('users')
                     .insert({
-                        id: authData.user.id,
+                        id: data.user.id,
                         username: username
                     });
                 
-                if (insertError && !insertError.message.includes('duplicate')) {
+                if (insertError) {
                     console.warn('Ошибка вставки в users:', insertError);
                 }
                 
                 alert('✅ Регистрация успешна! Теперь войдите в аккаунт.');
                 
-                // Переключаем на вход
+                // Переключаем на вход и подставляем никнейм
                 switchTab('login');
                 document.getElementById('loginUsername').value = username;
                 document.getElementById('loginPassword').value = '';
@@ -431,7 +427,9 @@
             }
         }
         
-        // ====== 6. ВХОД ======
+        // ============================================================
+        // 6. ВХОД
+        // ============================================================
         async function handleLogin(event) {
             event.preventDefault();
             
@@ -448,8 +446,7 @@
             btn.textContent = 'Вход...';
             
             try {
-                // Вход через Supabase Auth (используем email = username@temp.local)
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: username + '@temp.local',
                     password: password
                 });
@@ -480,21 +477,19 @@
             }
         }
         
-        // ====== 7. ПРОВЕРКА АВТОРИЗАЦИИ (если уже вошли) ======
+        // ============================================================
+        // 7. ПРОВЕРКА АВТОРИЗАЦИИ
+        // ============================================================
         async function checkAuth() {
-            const session = localStorage.getItem('supabase_session');
-            if (session) {
-                try {
-                    const { data, error } = await supabase.auth.getUser();
-                    if (data?.user) {
-                        window.location.href = 'dashboard.html';
-                    }
-                } catch (e) {
-                    // Не авторизованы
+            try {
+                const { data, error } = await supabaseClient.auth.getUser();
+                if (data?.user) {
+                    window.location.href = 'dashboard.html';
                 }
+            } catch (e) {
+                // Не авторизованы — остаемся на странице
             }
         }
-        // Раскомментируйте, если нужно автоматически перенаправлять
         // checkAuth();
     </script>
 </body>
