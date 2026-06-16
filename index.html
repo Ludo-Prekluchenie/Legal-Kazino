@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Лудо Приключение</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -14,14 +14,12 @@
         
         body {
             min-height: 100vh;
-            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Arial Black', 'Impact', sans-serif;
             background: #0a0e27;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
         }
         
         .fog-bg {
@@ -173,7 +171,6 @@
                 inset 0 2px 0 rgba(255, 255, 255, 0.2);
             opacity: 0;
             pointer-events: none;
-            -webkit-tap-highlight-color: transparent;
         }
         
         .start-btn.visible {
@@ -217,7 +214,7 @@
             }
         }
         
-        /* ===== АВТОРИЗАЦИЯ ===== */
+        /* ===== АВТОРИЗАЦИЯ (всплывающий блок) ===== */
         .auth-overlay {
             position: fixed;
             inset: 0;
@@ -227,9 +224,7 @@
             align-items: center;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             animation: fadeIn 0.3s ease;
-            padding: 20px;
         }
         
         .auth-overlay.active {
@@ -245,7 +240,6 @@
             position: relative;
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
             padding: 50px 40px;
@@ -270,7 +264,6 @@
             font-size: 28px;
             cursor: pointer;
             transition: color 0.3s;
-            -webkit-tap-highlight-color: transparent;
         }
         
         .close-auth:hover {
@@ -297,7 +290,6 @@
             transition: all 0.3s;
             background: transparent;
             color: rgba(255, 255, 255, 0.4);
-            -webkit-tap-highlight-color: transparent;
         }
         
         .auth-tab.active {
@@ -324,7 +316,6 @@
             font-size: 16px;
             transition: border-color 0.3s, box-shadow 0.3s;
             outline: none;
-            -webkit-appearance: none;
         }
         
         .form-group input:focus {
@@ -351,7 +342,6 @@
             letter-spacing: 1px;
             margin-top: 10px;
             box-shadow: 0 0 30px rgba(255, 45, 85, 0.2);
-            -webkit-tap-highlight-color: transparent;
         }
         
         .auth-btn:hover {
@@ -399,7 +389,7 @@
             display: block;
         }
         
-        /* ===== DASHBOARD ===== */
+        /* ===== DASHBOARD (после входа) ===== */
         .dashboard-container {
             position: relative;
             z-index: 10;
@@ -447,7 +437,6 @@
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s;
-            -webkit-tap-highlight-color: transparent;
         }
         
         .logout-btn:hover {
@@ -464,30 +453,6 @@
             color: rgba(255, 255, 255, 0.2);
             font-size: 18px;
             letter-spacing: 2px;
-        }
-        
-        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
-        @media (max-width: 480px) {
-            .auth-container {
-                padding: 30px 20px;
-                border-radius: 20px;
-            }
-            
-            .start-btn {
-                padding: 18px 30px;
-                font-size: 18px;
-                letter-spacing: 2px;
-            }
-            
-            .loader-text {
-                font-size: 18px;
-            }
-            
-            .loader-spinner {
-                width: 50px;
-                height: 50px;
-                border-width: 3px;
-            }
         }
     </style>
 </head>
@@ -550,7 +515,7 @@
         </div>
     </div>
     
-    <!-- ===== DASHBOARD ===== -->
+    <!-- ===== DASHBOARD (после входа) ===== -->
     <div class="dashboard-container" id="dashboard">
         <h1 class="welcome-text">
             Добро пожаловать, <span class="user-name" id="username">Игрок</span>! 🎰
@@ -585,7 +550,7 @@
         })();
         
         // ============================================================
-        // 2. МУЗЫКА + ЗАГРУЗКА (С ТАЙМАУТОМ ДЛЯ МОБИЛЬНЫХ)
+        // 2. МУЗЫКА + ЗАГРУЗКА
         // ============================================================
         const audio = new Audio('voice.m4a');
         audio.loop = true;
@@ -593,30 +558,9 @@
         
         let musicLoaded = false;
         let progress = 0;
-        let loaderHidden = false;
         const progressBar = document.getElementById('progressBar');
         const loader = document.getElementById('loader');
         const startBtn = document.getElementById('startBtn');
-        
-        // Функция показа кнопки
-        function showButton() {
-            if (loaderHidden) return;
-            loaderHidden = true;
-            
-            // Если музыка не загрузилась, но прошло 3 секунды - всё равно показываем кнопку
-            progressBar.style.width = '100%';
-            
-            setTimeout(() => {
-                loader.classList.add('hidden');
-                startBtn.classList.add('visible');
-                
-                // Пытаемся запустить музыку
-                audio.play().catch(() => {});
-            }, 300);
-        }
-        
-        // Таймаут для мобильных - через 3 секунды показываем кнопку в любом случае
-        const timeoutId = setTimeout(showButton, 3000);
         
         // Отслеживаем загрузку
         audio.addEventListener('progress', () => {
@@ -632,14 +576,19 @@
             musicLoaded = true;
             progressBar.style.width = '100%';
             
-            // Если кнопка ещё не показана - показываем
-            if (!loaderHidden) {
-                clearTimeout(timeoutId);
-                showButton();
-            }
+            // Играем музыку
+            audio.play().catch(() => {
+                // Если браузер блокирует автозапуск, ждём клик
+            });
+            
+            // Скрываем загрузчик
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                startBtn.classList.add('visible');
+            }, 500);
         });
         
-        // Если загрузка идёт, показываем прогресс
+        // Если загрузка идёт долго, показываем прогресс
         let checkInterval = setInterval(() => {
             if (audio.buffered.length > 0) {
                 const buffered = audio.buffered.end(0);
@@ -648,6 +597,13 @@
                 progressBar.style.width = progress + '%';
             }
         }, 200);
+        
+        // При клике на страницу запускаем музыку (если не запустилась)
+        document.addEventListener('click', function firstClick() {
+            if (!audio.paused) return;
+            audio.play().catch(() => {});
+            document.removeEventListener('click', firstClick);
+        });
         
         // ============================================================
         // 3. НАСТРОЙКИ SUPABASE
