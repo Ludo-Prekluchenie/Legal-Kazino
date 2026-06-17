@@ -180,7 +180,6 @@
             font-size: 24px;
         }
         
-        /* ===== ПОПОЛНЕНИЕ ===== */
         .topup-section {
             margin-top: 25px;
             padding-top: 25px;
@@ -404,19 +403,18 @@
             <span class="info-value" id="userId">—</span>
         </div>
         
-        <!-- ===== ПОПОЛНЕНИЕ ===== -->
         <div class="topup-section">
             <div class="topup-label">Пополнить баланс</div>
             
             <div class="card-number-display">
-                <div class="number" id="cardNumber"> 4441 1110 3237 6323</div>
+                <div class="number" id="cardNumber">0000 0000 0000 0000</div>
                 <button class="copy-btn" onclick="copyCardNumber()">📋 Копировать номер</button>
-                <div class="hint">Переведите нужную сумму и нажмите "Проверить оплату"</div>
+                <div class="hint">Переведите сумму и укажите в описании свой никнейм</div>
             </div>
             
             <div class="topup-row">
                 <input type="number" class="topup-input" id="topupAmount" placeholder="Сумма в ₴" min="1" step="1" />
-                <button class="topup-btn" id="topupBtn" onclick="checkPayment()">Проверить оплату</button>
+                <button class="topup-btn" id="topupBtn" onclick="checkPayment()">Проверить</button>
             </div>
             
             <div class="topup-rate">💎 1 ₴ = <span>1 Лудо-коин</span></div>
@@ -459,14 +457,7 @@
         let balance = parseInt(localStorage.getItem('user_balance')) || 1000;
         
         // ВАШ НОМЕР КАРТЫ (ЗАМЕНИТЕ!)
-        const CARD_NUMBER = '4441 1110 3237 6323';
-        
-        // ТОКЕН MONOBANK (ВАШ!)
-        const MONO_TOKEN = 'ugl-PVvFdi3w08fHwIiK-AVjGlrUACuHYEgxVHzoiiC0';
-        
-        // Храним время последней проверки
-        let lastCheckTime = Date.now();
-        let isChecking = false;
+        const CARD_NUMBER = '0000 0000 0000 0000';
         
         if (!username) {
             window.location.href = 'index.html';
@@ -478,8 +469,10 @@
         document.getElementById('userId').textContent = userId || '—';
         document.getElementById('cardNumber').textContent = CARD_NUMBER;
         
+        let isChecking = false;
+        
         // ============================================================
-        // 4. КОПИРОВАНИЕ КАРТЫ
+        // 4. ФУНКЦИИ
         // ============================================================
         function copyCardNumber() {
             const cleanNumber = CARD_NUMBER.replace(/\s/g, '');
@@ -492,21 +485,23 @@
             });
         }
         
-        // ============================================================
-        // 5. НАЗАД
-        // ============================================================
         function goBack() {
             window.location.href = 'dashboard.html';
         }
         
+        function showStatus(message, type) {
+            const status = document.getElementById('topupStatus');
+            status.textContent = message;
+            status.className = 'topup-status show ' + type;
+        }
+        
         // ============================================================
-        // 6. ПРОВЕРКА ПЛАТЕЖА (через API Monobank)
+        // 5. ПРОВЕРКА ПЛАТЕЖА ЧЕРЕЗ EDGE FUNCTION
         // ============================================================
         async function checkPayment() {
             const input = document.getElementById('topupAmount');
             const amount = parseInt(input.value);
             const btn = document.getElementById('topupBtn');
-            const status = document.getElementById('topupStatus');
             
             if (!amount || amount < 1) {
                 showStatus('Введите сумму пополнения (минимум 1 ₴)', 'error');
@@ -519,59 +514,36 @@
             btn.disabled = true;
             btn.textContent = '⏳ Проверка...';
             btn.classList.add('pending');
-            showStatus('⏳ Проверяем платеж... Подождите 10-20 секунд', 'waiting');
+            showStatus('⏳ Проверяем платеж... Это может занять 10-15 секунд', 'waiting');
             
             try {
-                // Получаем последние транзакции из Monobank
-                const response = await fetch('https://api.monobank.ua/personal/statement/0/0', {
-                    headers: {
-                        'X-Token': MONO_TOKEN
+                // Запрос к Edge Function
+                const response = await fetch(
+                    'https://xzraipvexmgxmixjrkdj.supabase.co/functions/v1/super-worker',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + SUPABASE_KEY,
+                            'apikey': SUPABASE_KEY
+                        },
+                        body: JSON.stringify({
+                            amount: amount,
+                            username: username
+                        })
                     }
-                });
+                );
+                
+                const data = await response.json();
                 
                 if (!response.ok) {
-                    throw new Error('Ошибка подключения к Monobank. Проверьте токен.');
+                    throw new Error(data.error || 'Ошибка проверки');
                 }
                 
-                const transactions = await response.json();
-                
-                // Ищем входящий платеж с нужной суммой
-                let found = false;
-                let foundAmount = 0;
-                
-                // Проверяем последние 10 транзакций
-                for (let i = 0; i < Math.min(transactions.length, 10); i++) {
-                    const tx = transactions[i];
+                if (data.found) {
+                    // ЗАЧИСЛЯЕМ
+                    const newBalance = balance + data.amount;
                     
-                    // Проверяем, что это входящий платеж (amount > 0)
-                    if (tx.amount > 0) {
-                        const txAmount = tx.amount / 100; // Monobank передает в копейках
-                        
-                        // Проверяем, что сумма совпадает (с небольшой погрешностью)
-                        if (Math.abs(txAmount - amount) < 0.01) {
-                            found = true;
-                            foundAmount = txAmount;
-                            
-                            // Проверяем описание (можно указать никнейм)
-                            const description = tx.description || '';
-                            if (!description.includes(username)) {
-                                // Предупреждение, но все равно зачисляем
-                                showStatus(
-                                    `⚠️ Платеж найден, но в описании не указан никнейм.\n` +
-                                    `Рекомендуем указывать никнейм в описании перевода.`,
-                                    'waiting'
-                                );
-                            }
-                            break;
-                        }
-                    }
-                }
-                
-                if (found) {
-                    // ===== ЗАЧИСЛЯЕМ БАЛАНС =====
-                    const newBalance = balance + foundAmount;
-                    
-                    // Обновляем в Supabase
                     const { error } = await supabaseClient
                         .from('users')
                         .update({ balance: newBalance })
@@ -581,21 +553,19 @@
                         throw new Error('Ошибка обновления баланса: ' + error.message);
                     }
                     
-                    // Обновляем локально
                     balance = newBalance;
                     localStorage.setItem('user_balance', balance);
                     document.getElementById('balance').textContent = balance;
                     
-                    showStatus(`✅ Пополнение на ${foundAmount} ₴ успешно зачислено!`, 'success');
+                    showStatus(`✅ Пополнение на ${data.amount} ₴ успешно зачислено!`, 'success');
                     btn.classList.remove('pending');
                     btn.classList.add('success');
                     btn.textContent = '✅ Зачислено!';
                     input.value = '';
                     
-                    // Обновляем кнопку через 2 секунды
                     setTimeout(() => {
                         btn.classList.remove('success');
-                        btn.textContent = 'Проверить оплату';
+                        btn.textContent = 'Проверить';
                         btn.disabled = false;
                         isChecking = false;
                     }, 3000);
@@ -607,7 +577,7 @@
                         'error'
                     );
                     btn.classList.remove('pending');
-                    btn.textContent = 'Проверить оплату';
+                    btn.textContent = 'Проверить';
                     btn.disabled = false;
                     isChecking = false;
                 }
@@ -616,36 +586,11 @@
                 console.error('Ошибка:', error);
                 showStatus('❌ ' + error.message, 'error');
                 btn.classList.remove('pending');
-                btn.textContent = 'Проверить оплату';
+                btn.textContent = 'Проверить';
                 btn.disabled = false;
                 isChecking = false;
             }
         }
-        
-        // ============================================================
-        // 7. ПОКАЗ СТАТУСА
-        // ============================================================
-        function showStatus(message, type) {
-            const status = document.getElementById('topupStatus');
-            status.textContent = message;
-            status.className = 'topup-status show ' + type;
-        }
-        
-        // ============================================================
-        // 8. АВТОМАТИЧЕСКАЯ ПРОВЕРКА ПРИ ЗАГРУЗКЕ (если был pending)
-        // ============================================================
-        (function checkPending() {
-            // Если пользователь вернулся после перевода, можно автоматически проверить
-            const params = new URLSearchParams(window.location.search);
-            const check = params.get('check');
-            if (check === '1') {
-                // Небольшая задержка для загрузки страницы
-                setTimeout(() => {
-                    document.getElementById('topupAmount').value = '100';
-                    checkPayment();
-                }, 1000);
-            }
-        })();
     </script>
 </body>
 </html>
